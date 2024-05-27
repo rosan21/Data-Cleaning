@@ -1,12 +1,11 @@
-import openpyxl
+import os
+from openpyxl import load_workbook, Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
-import os
-from openpyxl import Workbook
 
 def week1(file_path):
     # Load the workbook and select the worksheet
-    wb = openpyxl.load_workbook(file_path)
+    wb = load_workbook(file_path)
     ws = wb['week1']
     
     # Find the last used column in the worksheet
@@ -18,7 +17,7 @@ def week1(file_path):
         for col in range(last_column, last_column - 8, -1):
             ws.delete_cols(col)
         
-            # Find the last row and last column of data in the worksheet
+        # Find the last row and last column of data in the worksheet
         last_row = ws.max_row
         last_col = ws.max_column
         
@@ -45,7 +44,7 @@ def week1(file_path):
         # Add the table to the worksheet
         ws.add_table(table)
 
-            # Define the column containing the school names (6th column)
+        # Define the column containing the school names (6th column)
         school_column = [row[0] for row in ws.iter_rows(min_row=2, min_col=6, max_col=6, values_only=True)]
         
         # Create a collection to store unique school names
@@ -93,8 +92,28 @@ def week1(file_path):
             table.tableStyleInfo = style
             new_ws.add_table(table)
             
+            # Copy the original 'week1' sheet to the new workbook
+            orig_week1_ws = wb['week1']
+            new_week1_ws = new_wb.create_sheet(title='week1')
+            
+            for row in orig_week1_ws.iter_rows(values_only=True):
+                new_week1_ws.append(row)
+            
+            # Convert the 'week1' sheet data into a table
+            last_row_week1 = new_week1_ws.max_row
+            last_column_week1 = new_week1_ws.max_column
+            tbl_range_week1 = f"A1:{get_column_letter(last_column_week1)}{last_row_week1}"
+            table_week1 = Table(displayName="Week1Table", ref=tbl_range_week1)
+            
+            # Add a table style for the 'week1' sheet
+            style_week1 = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False,
+                                        showLastColumn=False, showRowStripes=True, showColumnStripes=True)
+            table_week1.tableStyleInfo = style_week1
+            new_week1_ws.add_table(table_week1)
+            
             # Save the new workbook in the school's folder with the name "week1.xlsx"
             new_file_path = os.path.join(folder_path, 'week1.xlsx')
             new_wb.save(new_file_path)
     else:
         print("There are not enough columns to remove.")
+
